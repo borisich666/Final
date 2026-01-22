@@ -1,13 +1,14 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from authenticate.views import RegisterView, AnalyticsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('authenticate.urls')),
-    path('api/register/', RegisterView.as_view(), name='register'),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/analytics/', AnalyticsView.as_view(), name='analytics'),
+
+    # API endpoints
+    path('api/auth/', include('authenticate.urls')),
+    path('api/companies/', include('companies.urls')),
+    path('api/suppliers/', include('suppliers.urls')),
+    path('api/product/', include('product.urls')),
+    path('api/warehouse/', include('warehouse.urls')),
+    path('api/sales/', include('sales.urls')),
 ]

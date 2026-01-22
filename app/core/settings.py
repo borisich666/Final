@@ -41,6 +41,14 @@ INSTALLED_APPS = [
     'authenticate.apps.AuthenticateConfig',
     # ALL YOUR APPS
     'drf_spectacular',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'authenticate',
+    'companies',
+    'suppliers',
+    'product',
+    'warehouse',
+    'sales',
 
 ]
 

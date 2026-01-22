@@ -1,15 +1,19 @@
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import *
+from django.contrib.auth.hashers import make_password
+from rest_framework import serializers
+from rest_framework.validators import ValidationError
 
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    company_name = serializers.CharField(source='company.name', read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'is_company_owner', 'company']
-        read_only_fields = ['is_company_owner', 'company']
+        fields = ['id', 'email', 'username', 'first_name', 'last_name',
+                  'is_company_owner', 'company', 'company_name', 'date_joined']
+        read_only_fields = ['is_company_owner', 'company', 'date_joined']
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -20,48 +24,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         fields = ['email', 'username', 'password', 'first_name', 'last_name']
 
     def create(self, validated_data):
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
-        )
-        return user
+        # Используем стандартный create метод ModelSerializer
+        # и хешируем пароль вручную
+        validated_data['password'] = make_password(validated_data['password'])
+        return User.objects.create(**validated_data)
 
 
-class CompanySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Company
-        fields = ['id', 'name', 'inn', 'description', 'created_at']
+class AddEmployeeSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField(required=False)
+    email = serializers.EmailField(required=False)
 
-
-class StorageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Storage
-        fields = ['id', 'company', 'address', 'created_at']
-
-
-class SupplierSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Supplier
-        fields = ['id', 'company', 'name', 'inn', 'created_at']
-
-
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'storage', 'name', 'sku', 'quantity',
-                  'purchase_price', 'sale_price', 'created_at']
-
-
-class SupplySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Supply
-        fields = ['id', 'supplier', 'delivery_date', 'created_at']
-
-
-class SaleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Sale
-        fields = ['id', 'company', 'buyer_name', 'created_at']
+    def validate(self, data):
+        if not data.get('user_id') and not data.get('email'):
+            raise ValidationError("Необходимо указать user_id или email")
+        return data
